@@ -3,13 +3,18 @@ const path = require("path");
 const hbs = require("hbs");
 const cors = require("cors");
 const multer = require("multer");
+const fs = require("fs");
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, __dirname + "/../uploads");
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + "-" + Date.now());
+    let ext;
+    if (file.mimetype === "application/pdf") {
+      ext = ".pdf";
+    }
+    cb(null, file.fieldname + "-" + Date.now() + ext);
   },
 });
 
@@ -46,8 +51,14 @@ app.options("/fileuploads", (req, res) => {
 });
 
 app.post("/fileupload", upload.single("file"), (req, res) => {
-  console.log(req.file);
-  res.send({ h: "hello" });
+  console.log(req.file.filename);
+  console.log(__dirname);
+  const fileDir = path.join(__dirname, `../uploads/${req.file.filename}`);
+  fs.readFile(fileDir, function (err, data) {
+    res.contentType("application/pdf");
+    res.send(data);
+  });
+  // res.send({ msg: "uploaded!" });
 });
 
 const port = 3000;
